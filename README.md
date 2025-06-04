@@ -18,38 +18,58 @@ A web application designed to help healthcare staff manage and automate the deni
 - Data Processing: Pandas
 - Templates: Jinja2
 
-## Setup Instructions
+## Installation Instructions
 
-1. Clone the repository:
-```bash
-git clone [repository-url]
-cd MedicalProject
-```
+1. **Clone the repository:**
+    ```bash
+    git clone [repository-url]
+    cd MedicalProject
+    ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+2. **Set up a virtual environment (Python 3.8+ recommended):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-4. Initialize the database:
-```bash
-flask db init
-flask db migrate
-flask db upgrade
-```
+4. **Set environment variables (optional, see `env.example`):**
+    - Copy `env.example` to `.env` and adjust as needed.
 
-5. Run the application:
-```bash
-flask run
-```
+5. **Initialize the database:**
+    ```bash
+    flask db init
+    flask db migrate
+    flask db upgrade
+    ```
 
-The application will be available at `http://localhost:5000`
+6. **Run the application:**
+    ```bash
+    flask run
+    ```
+
+The application will be available at [http://localhost:5000](http://localhost:5000).
+
+## Usage Guide
+
+1. **Access the web interface:**  
+   Open your browser and go to [http://localhost:5000](http://localhost:5000).
+
+2. **Upload claim data:**  
+   Use the upload feature or enter claim data manually.
+
+3. **Review analysis:**  
+   The system will automatically identify potential billing issues and suggest denial reasons.
+
+4. **Generate appeals:**  
+   Use the interface to generate and manage denial appeal messages.
+
+5. **Track issues:**  
+   Monitor the status of claims and appeals through the issue tracker.
 
 ## Project Structure
 
@@ -67,17 +87,19 @@ MedicalProject/
 └── README.md
 ```
 
-## Usage
-
-1. Access the web interface at `http://localhost:5000`
-2. Upload claim data or enter it manually
-3. Review automated analysis of potential billing issues
-4. Generate and manage denial appeals
-5. Track issues and their resolution status
-
 ## Contributing
 
-Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+I welcome contributions! To get started:
+
+1. Fork the repository and create your branch from `main`.
+2. If you've added code, write tests.
+3. Ensure the test suite passes:  
+   ```bash
+   pytest --cov=migrations tests/
+   ```
+4. Submit a pull request with a clear description of your changes.
+
+Please read `CONTRIBUTING.md` for more details on our code of conduct and the process for submitting pull requests.
 
 ## License
 
