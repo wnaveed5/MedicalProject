@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-person-circle display-1 text-primary"></i>
+                <h3 class="mt-3">{{ user.get_full_name() }}</h3>
+                <p class="text-muted">@{{ user.username }}</p>
+                <span class="badge bg-{{ 'success' if user.role == 'admin' else 'primary' if user.role == 'manager' else 'secondary' }} fs-6">
+                    {{ user.role|title }}
+                </span>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Account Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Email:</strong><br>
+                    <span class="text-muted">{{ user.email }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Member Since:</strong><br>
+                    <span class="text-muted">{{ user.created_at.strftime('%B %d, %Y') }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Last Login:</strong><br>
+                    <span class="text-muted">
+                        {% if user.last_login %}
+                            {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                        {{ 'Active' if user.is_active else 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bar-chart"></i> Your Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Claims Created</h6>
+                                <h2 class="card-text">{{ user.created_claims|length }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Days Active</h6>
+                                <h2 class="card-text">{{ (moment().date() - user.created_at.date()).days if user.created_at else 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if user.created_claims %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history"></i> Recent Claims Created</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Claim Number</th>
+                                <th>Patient ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in user.created_claims[:10] %}
+                            <tr>
+                                <td>{{ claim.claim_number }}</td>
+                                <td>{{ claim.patient_id }}</td>
+                                <td>${{ "%.2f"|format(claim.total_amount) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if claim.status == 'approved' else 'warning' if claim.status == 'pending' else 'danger' }}">
+                                        {{ claim.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ claim.created_at.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.view_claim', claim_id=claim.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="bi bi-gear"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.new_claim') }}" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Create New Claim
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.upload_claims') }}" class="btn btn-secondary w-100">
+                            <i class="bi bi-upload"></i> Upload Claims
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

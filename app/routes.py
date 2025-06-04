@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, send_file, make_response
+from flask_login import login_required, current_user
 from app import db
 from app.models import Claim, Denial, Issue
 from datetime import datetime
@@ -21,6 +22,7 @@ DENIAL_CODES = {
 }
 
 @main.route('/')
+@login_required
 def index():
     # Get all claims for statistics
     all_claims = Claim.query.all()
@@ -39,11 +41,13 @@ def index():
                          recent_claims=recent_claims)
 
 @main.route('/claims')
+@login_required
 def claims_list():
     claims = Claim.query.order_by(Claim.created_at.desc()).all()
     return render_template('claims/list.html', claims=claims, denial_codes=DENIAL_CODES)
 
 @main.route('/claims/new', methods=['GET', 'POST'])
+@login_required
 def new_claim():
     if request.method == 'POST':
         try:
@@ -53,7 +57,8 @@ def new_claim():
                 provider_id=request.form['provider_id'],
                 service_date=datetime.strptime(request.form['service_date'], '%Y-%m-%d').date(),
                 total_amount=float(request.form['total_amount']),
-                status='pending'
+                status='pending',
+                created_by=current_user.id
             )
             db.session.add(claim)
             db.session.commit()
@@ -69,6 +74,7 @@ def new_claim():
     return render_template('claims/new.html')
 
 @main.route('/claims/upload', methods=['GET', 'POST'])
+@login_required
 def upload_claims():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -90,7 +96,8 @@ def upload_claims():
                         provider_id=row['provider_id'],
                         service_date=pd.to_datetime(row['service_date']).date(),
                         total_amount=float(row['total_amount']),
-                        status='pending'
+                        status='pending',
+                        created_by=current_user.id
                     )
                     db.session.add(claim)
                     analyze_claim(claim)
@@ -106,6 +113,7 @@ def upload_claims():
     return render_template('claims/upload.html')
 
 @main.route('/claims/download-sample')
+@login_required
 def download_sample():
     # Create sample CSV data
     sample_data = {
@@ -130,11 +138,13 @@ def download_sample():
     return response
 
 @main.route('/claims/<int:claim_id>')
+@login_required
 def view_claim(claim_id):
     claim = Claim.query.get_or_404(claim_id)
     return render_template('claims/view.html', claim=claim, denial_codes=DENIAL_CODES)
 
 @main.route('/claims/<int:claim_id>/deny', methods=['POST'])
+@login_required
 def deny_claim(claim_id):
     claim = Claim.query.get_or_404(claim_id)
     try:
