@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, send_file, make_response
 from app import db
 from app.models import Claim, Denial, Issue
 from datetime import datetime
 import pandas as pd
 from werkzeug.utils import secure_filename
 import os
+import io
 
 main = Blueprint('main', __name__)
 
@@ -21,12 +22,26 @@ DENIAL_CODES = {
 
 @main.route('/')
 def index():
-    return render_template('index.html')
+    # Get all claims for statistics
+    all_claims = Claim.query.all()
+    pending_claims = Claim.query.filter_by(status='pending').all()
+    denied_claims = Claim.query.filter_by(status='denied').all()
+    approved_claims = Claim.query.filter_by(status='approved').all()
+    
+    # Get recent claims (last 10)
+    recent_claims = Claim.query.order_by(Claim.created_at.desc()).limit(10).all()
+    
+    return render_template('index.html', 
+                         claims=all_claims,
+                         pending_claims=pending_claims,
+                         denied_claims=denied_claims,
+                         approved_claims=approved_claims,
+                         recent_claims=recent_claims)
 
 @main.route('/claims')
 def claims_list():
     claims = Claim.query.order_by(Claim.created_at.desc()).all()
-    return render_template('claims/list.html', claims=claims)
+    return render_template('claims/list.html', claims=claims, denial_codes=DENIAL_CODES)
 
 @main.route('/claims/new', methods=['GET', 'POST'])
 def new_claim():
@@ -90,10 +105,34 @@ def upload_claims():
     
     return render_template('claims/upload.html')
 
+@main.route('/claims/download-sample')
+def download_sample():
+    # Create sample CSV data
+    sample_data = {
+        'claim_number': ['CLM001', 'CLM002', 'CLM003'],
+        'patient_id': ['PAT001', 'PAT002', 'PAT001'],
+        'provider_id': ['PROV001', 'PROV001', 'PROV002'],
+        'service_date': ['2024-03-15', '2024-03-16', '2024-03-17'],
+        'total_amount': [1500.00, 2750.50, 950.75]
+    }
+    
+    # Create DataFrame and convert to CSV
+    df = pd.DataFrame(sample_data)
+    output = io.StringIO()
+    df.to_csv(output, index=False)
+    output.seek(0)
+    
+    # Create response
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=sample_claims.csv'
+    
+    return response
+
 @main.route('/claims/<int:claim_id>')
 def view_claim(claim_id):
     claim = Claim.query.get_or_404(claim_id)
-    return render_template('claims/view.html', claim=claim)
+    return render_template('claims/view.html', claim=claim, denial_codes=DENIAL_CODES)
 
 @main.route('/claims/<int:claim_id>/deny', methods=['POST'])
 def deny_claim(claim_id):
