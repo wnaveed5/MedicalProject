@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}New Claim - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Create New Claim</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.new_claim') }}">
+                    <div class="mb-3">
+                        <label for="claim_number" class="form-label">Claim Number</label>
+                        <input type="text" class="form-control" id="claim_number" name="claim_number" required>
+                        <div class="form-text">Enter the unique claim identifier</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="patient_id" class="form-label">Patient ID</label>
+                        <input type="text" class="form-control" id="patient_id" name="patient_id" required>
+                        <div class="form-text">Enter the patient's unique identifier</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="provider_id" class="form-label">Provider ID</label>
+                        <input type="text" class="form-control" id="provider_id" name="provider_id" required>
+                        <div class="form-text">Enter the healthcare provider's identifier</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="service_date" class="form-label">Service Date</label>
+                        <input type="date" class="form-control" id="service_date" name="service_date" required>
+                        <div class="form-text">Enter the date when the service was provided</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="total_amount" class="form-label">Total Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="total_amount" name="total_amount" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-text">Enter the total claim amount</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Create Claim</button>
+                        <a href="{{ url_for('main.claims_list') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set max date to today for service date
+    document.getElementById('service_date').max = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %} 

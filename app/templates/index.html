@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h1 class="display-4">Welcome to Denial Management System</h1>
+        <p class="lead">Streamline your healthcare claim denial management process</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <div class="list-group">
+                    <a href="{{ url_for('main.new_claim') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-plus-circle"></i> Create New Claim
+                    </a>
+                    <a href="{{ url_for('main.upload_claims') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-upload"></i> Upload Claims
+                    </a>
+                    <a href="{{ url_for('main.claims_list') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-list"></i> View All Claims
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Claim Statistics</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Claims</h6>
+                                <h2 class="card-text">{{ claims|length if claims else 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Pending Claims</h6>
+                                <h2 class="card-text">{{ pending_claims|length if pending_claims else 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Denied Claims</h6>
+                                <h2 class="card-text">{{ denied_claims|length if denied_claims else 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Claims -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Recent Claims</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Claim Number</th>
+                                <th>Patient ID</th>
+                                <th>Service Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in recent_claims %}
+                            <tr>
+                                <td>{{ claim.claim_number }}</td>
+                                <td>{{ claim.patient_id }}</td>
+                                <td>{{ claim.service_date.strftime('%Y-%m-%d') }}</td>
+                                <td>${{ "%.2f"|format(claim.total_amount) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if claim.status == 'approved' else 'warning' if claim.status == 'pending' else 'danger' }}">
+                                        {{ claim.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.view_claim', claim_id=claim.id) }}" class="btn btn-sm btn-primary">View</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No recent claims found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

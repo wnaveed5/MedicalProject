@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Claims List - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Claims List</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('main.new_claim') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Claim
+        </a>
+        <a href="{{ url_for('main.upload_claims') }}" class="btn btn-secondary">
+            <i class="bi bi-upload"></i> Upload Claims
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="denied" {% if request.args.get('status') == 'denied' %}selected{% endif %}>Denied</option>
+                    <option value="approved" {% if request.args.get('status') == 'approved' %}selected{% endif %}>Approved</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">Date From</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">Date To</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" placeholder="Claim # or Patient ID" value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{{ url_for('main.claims_list') }}" class="btn btn-secondary">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Claims Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?sort=claim_number&order={% if request.args.get('sort') == 'claim_number' and request.args.get('order') == 'asc' %}desc{% else %}asc{% endif %}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}" class="text-decoration-none text-dark">
+                                Claim Number
+                                {% if request.args.get('sort') == 'claim_number' %}
+                                    <i class="bi bi-arrow-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Patient ID</th>
+                        <th>
+                            <a href="?sort=service_date&order={% if request.args.get('sort') == 'service_date' and request.args.get('order') == 'asc' %}desc{% else %}asc{% endif %}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}" class="text-decoration-none text-dark">
+                                Service Date
+                                {% if request.args.get('sort') == 'service_date' %}
+                                    <i class="bi bi-arrow-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=total_amount&order={% if request.args.get('sort') == 'total_amount' and request.args.get('order') == 'asc' %}desc{% else %}asc{% endif %}{% if request.args.get('status') %}&status={{ request.args.get('status') }}{% endif %}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}" class="text-decoration-none text-dark">
+                                Amount
+                                {% if request.args.get('sort') == 'total_amount' %}
+                                    <i class="bi bi-arrow-{{ 'up' if request.args.get('order') == 'asc' else 'down' }}"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Status</th>
+                        <th>Issues</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for claim in claims %}
+                    <tr>
+                        <td>{{ claim.claim_number }}</td>
+                        <td>{{ claim.patient_id }}</td>
+                        <td>{{ claim.service_date.strftime('%Y-%m-%d') }}</td>
+                        <td>${{ "%.2f"|format(claim.total_amount) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if claim.status == 'approved' else 'warning' if claim.status == 'pending' else 'danger' }}">
+                                {{ claim.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if claim.issues %}
+                                <span class="badge bg-danger">{{ claim.issues|length }}</span>
+                            {% else %}
+                                <span class="badge bg-success">0</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('main.view_claim', claim_id=claim.id) }}" class="btn btn-sm btn-primary">View</a>
+                                {% if claim.status == 'pending' %}
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#denyModal{{ claim.id }}">
+                                    Deny
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            <!-- Deny Modal -->
+                            {% if claim.status == 'pending' %}
+                            <div class="modal fade" id="denyModal{{ claim.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="POST" action="{{ url_for('main.deny_claim', claim_id=claim.id) }}">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Deny Claim</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="denial_code" class="form-label">Denial Code</label>
+                                                    <select class="form-select" id="denial_code" name="denial_code" required>
+                                                        <option value="">Select a denial code</option>
+                                                        {% for code, reason in denial_codes.items() %}
+                                                        <option value="{{ code }}">{{ code }} - {{ reason }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="denial_date" class="form-label">Denial Date</label>
+                                                    <input type="date" class="form-control" id="denial_date" name="denial_date" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="appeal_deadline" class="form-label">Appeal Deadline</label>
+                                                    <input type="date" class="form-control" id="appeal_deadline" name="appeal_deadline">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-danger">Confirm Denial</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No claims found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set max date to today for denial date and appeal deadline
+    document.getElementById('denial_date').max = new Date().toISOString().split('T')[0];
+    document.getElementById('appeal_deadline').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %} 

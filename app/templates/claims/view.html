@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Claim {{ claim.claim_number }} - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Claim Details</h1>
+        <p class="text-muted">Claim Number: {{ claim.claim_number }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('main.claims_list') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Claims
+        </a>
+        {% if claim.status == 'pending' %}
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#denyModal">
+            <i class="bi bi-x-circle"></i> Deny Claim
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Claim Information -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Claim Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ 'success' if claim.status == 'approved' else 'warning' if claim.status == 'pending' else 'danger' }}">
+                            {{ claim.status|title }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Patient ID</dt>
+                    <dd class="col-sm-8">{{ claim.patient_id }}</dd>
+
+                    <dt class="col-sm-4">Provider ID</dt>
+                    <dd class="col-sm-8">{{ claim.provider_id }}</dd>
+
+                    <dt class="col-sm-4">Service Date</dt>
+                    <dd class="col-sm-8">{{ claim.service_date.strftime('%Y-%m-%d') }}</dd>
+
+                    <dt class="col-sm-4">Total Amount</dt>
+                    <dd class="col-sm-8">${{ "%.2f"|format(claim.total_amount) }}</dd>
+
+                    <dt class="col-sm-4">Created</dt>
+                    <dd class="col-sm-8">{{ claim.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+
+                    <dt class="col-sm-4">Last Updated</dt>
+                    <dd class="col-sm-8">{{ claim.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issues Section -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Issues</h5>
+            </div>
+            <div class="card-body">
+                {% if claim.issues %}
+                    <div class="list-group">
+                        {% for issue in claim.issues %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ issue.issue_type|title }}</h6>
+                                <span class="badge bg-{{ 'danger' if issue.severity == 'high' else 'warning' if issue.severity == 'medium' else 'success' }}">
+                                    {{ issue.severity|title }}
+                                </span>
+                            </div>
+                            <p class="mb-1">{{ issue.description }}</p>
+                            <small class="text-muted">
+                                Status: {{ issue.status|title }}
+                                {% if issue.resolution_notes %}
+                                <br>Resolution: {{ issue.resolution_notes }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No issues found for this claim.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Denials Section -->
+{% if claim.denials %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Denial History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Denial Code</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Appeal Deadline</th>
+                                <th>Appeal Status</th>
+                                <th>Appeal Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for denial in claim.denials %}
+                            <tr>
+                                <td>{{ denial.denial_code }}</td>
+                                <td>{{ denial.denial_reason }}</td>
+                                <td>{{ denial.denial_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if denial.appeal_deadline %}
+                                        {{ denial.appeal_deadline.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if denial.appeal_status == 'approved' else 'warning' if denial.appeal_status == 'pending' else 'danger' if denial.appeal_status == 'denied' else 'secondary' }}">
+                                        {{ denial.appeal_status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ denial.appeal_message or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Deny Modal -->
+{% if claim.status == 'pending' %}
+<div class="modal fade" id="denyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('main.deny_claim', claim_id=claim.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Deny Claim</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="denial_code" class="form-label">Denial Code</label>
+                        <select class="form-select" id="denial_code" name="denial_code" required>
+                            <option value="">Select a denial code</option>
+                            {% for code, reason in denial_codes.items() %}
+                            <option value="{{ code }}">{{ code }} - {{ reason }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="denial_date" class="form-label">Denial Date</label>
+                        <input type="date" class="form-control" id="denial_date" name="denial_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="appeal_deadline" class="form-label">Appeal Deadline</label>
+                        <input type="date" class="form-control" id="appeal_deadline" name="appeal_deadline">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Denial</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set max date to today for denial date and appeal deadline
+    document.getElementById('denial_date').max = new Date().toISOString().split('T')[0];
+    document.getElementById('appeal_deadline').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %} 

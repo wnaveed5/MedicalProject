@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Claims - Denial Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Upload Claims</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            Upload a CSV file containing claim data. The file should have the following columns:
+                            <ul>
+                                <li>claim_number (required)</li>
+                                <li>patient_id (required)</li>
+                                <li>provider_id (required)</li>
+                                <li>service_date (required, format: YYYY-MM-DD)</li>
+                                <li>total_amount (required, numeric)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">CSV File Format</h5>
+                        <p>Your CSV file should look like this:</p>
+                        <pre class="mb-0">claim_number,patient_id,provider_id,service_date,total_amount
+CLM001,PAT001,PROV001,2024-03-15,1500.00
+CLM002,PAT002,PROV001,2024-03-16,2750.50
+CLM003,PAT001,PROV002,2024-03-17,950.75</pre>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Upload Claims</button>
+                        <a href="{{ url_for('main.claims_list') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample File Download -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Need a Sample File?</h5>
+                <p class="card-text">Download a sample CSV file to see the correct format.</p>
+                <a href="{{ url_for('main.download_sample') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download"></i> Download Sample CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Validate file type
+    document.getElementById('file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Please select a CSV file');
+                e.target.value = '';
+            }
+        }
+    });
+</script>
+{% endblock %} 
