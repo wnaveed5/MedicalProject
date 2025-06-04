@@ -32,11 +32,12 @@
                         {% endwith %}
 
                         <form method="POST">
+                            {{ form.hidden_tag() }}
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    {{ form.username(class_="form-control", id="username", required=True) }}
                                 </div>
                             </div>
 
@@ -44,12 +45,12 @@
                                 <label for="password" class="form-label">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    {{ form.password(class_="form-control", id="password", required=True) }}
                                 </div>
                             </div>
 
                             <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                                {{ form.remember(class_="form-check-input", id="remember") }}
                                 <label class="form-check-label" for="remember">Remember me</label>
                             </div>
 

@@ -1,138 +1,134 @@
 {% extends "base.html" %}
 
-{% block title %}Profile - Denial Management System{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="bi bi-person-circle display-1 text-primary"></i>
-                <h3 class="mt-3">{{ user.get_full_name() }}</h3>
-                <p class="text-muted">@{{ user.username }}</p>
-                <span class="badge bg-{{ 'success' if user.role == 'admin' else 'primary' if user.role == 'manager' else 'secondary' }} fs-6">
-                    {{ user.role|title }}
-                </span>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-circle"></i>
+                        Profile Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Username:</strong> {{ user.username }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                            <p><strong>Role:</strong> 
+                                <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'manager' %}warning{% else %}primary{% endif %}">
+                                    {{ user.role.title() }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Member Since:</strong> {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                            <p><strong>Last Login:</strong> 
+                                {% if user.last_login %}
+                                    {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-success">Active</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="bi bi-info-circle"></i> Account Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <strong>Email:</strong><br>
-                    <span class="text-muted">{{ user.email }}</span>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-check"></i>
+                        Security Actions
+                    </h5>
                 </div>
-                <div class="mb-3">
-                    <strong>Member Since:</strong><br>
-                    <span class="text-muted">{{ user.created_at.strftime('%B %d, %Y') }}</span>
-                </div>
-                <div class="mb-3">
-                    <strong>Last Login:</strong><br>
-                    <span class="text-muted">
-                        {% if user.last_login %}
-                            {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
-                        {% else %}
-                            Never
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-key"></i>
+                            Change Password
+                        </a>
+                        
+                        {% if user.role == 'admin' %}
+                        <a href="{{ url_for('auth.admin_users') }}" class="btn btn-outline-warning">
+                            <i class="bi bi-people"></i>
+                            Manage Users
+                        </a>
                         {% endif %}
-                    </span>
+                        
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </a>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <strong>Status:</strong><br>
-                    <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
-                        {{ 'Active' if user.is_active else 'Inactive' }}
-                    </span>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        Security Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Use a strong, unique password</li>
+                        <li>Change your password regularly</li>
+                        <li>Never share your login credentials</li>
+                        <li>Log out when finished working</li>
+                        <li>Report suspicious activity immediately</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="bi bi-bar-chart"></i> Your Activity</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">Claims Created</h6>
-                                <h2 class="card-text">{{ user.created_claims|length }}</h2>
+    
+    <!-- Activity Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity"></i>
+                        Account Activity Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-primary">{{ user.claims|length }}</h4>
+                                <small class="text-muted">Claims Created</small>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card bg-info text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">Days Active</h6>
-                                <h2 class="card-text">{{ (moment().date() - user.created_at.date()).days if user.created_at else 0 }}</h2>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-warning">{{ user.claims|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
+                                <small class="text-muted">Pending Claims</small>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {% if user.created_claims %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="bi bi-clock-history"></i> Recent Claims Created</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Claim Number</th>
-                                <th>Patient ID</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for claim in user.created_claims[:10] %}
-                            <tr>
-                                <td>{{ claim.claim_number }}</td>
-                                <td>{{ claim.patient_id }}</td>
-                                <td>${{ "%.2f"|format(claim.total_amount) }}</td>
-                                <td>
-                                    <span class="badge bg-{{ 'success' if claim.status == 'approved' else 'warning' if claim.status == 'pending' else 'danger' }}">
-                                        {{ claim.status|title }}
-                                    </span>
-                                </td>
-                                <td>{{ claim.created_at.strftime('%m/%d/%Y') }}</td>
-                                <td>
-                                    <a href="{{ url_for('main.view_claim', claim_id=claim.id) }}" class="btn btn-sm btn-outline-primary">View</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="bi bi-gear"></i> Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('main.new_claim') }}" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-circle"></i> Create New Claim
-                        </a>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <a href="{{ url_for('main.upload_claims') }}" class="btn btn-secondary w-100">
-                            <i class="bi bi-upload"></i> Upload Claims
-                        </a>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-success">{{ user.claims|selectattr('status', 'equalto', 'approved')|list|length }}</h4>
+                                <small class="text-muted">Approved Claims</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 border rounded">
+                                <h4 class="text-danger">{{ user.claims|selectattr('status', 'equalto', 'denied')|list|length }}</h4>
+                                <small class="text-muted">Denied Claims</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

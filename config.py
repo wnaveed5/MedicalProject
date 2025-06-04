@@ -46,16 +46,18 @@ class Config:
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
     LOG_FILE = os.environ.get('LOG_FILE', 'app.log')
     
-    # Security Headers
+    # Security Headers - More permissive for development
     SECURITY_HEADERS = {
-        'force_https': False,  # Set to True in production with HTTPS
-        'strict_transport_security': True,
+        'force_https': False,
+        'strict_transport_security': False,  # Disabled for development
         'content_security_policy': {
             'default-src': "'self'",
-            'script-src': "'self' 'unsafe-inline' cdn.jsdelivr.net",
-            'style-src': "'self' 'unsafe-inline' cdn.jsdelivr.net",
-            'img-src': "'self' data:",
-            'font-src': "'self' cdn.jsdelivr.net",
+            'script-src': "'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net",
+            'style-src': "'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com",
+            'img-src': "'self' data: cdn.jsdelivr.net",
+            'font-src': "'self' cdn.jsdelivr.net fonts.gstatic.com",
+            'connect-src': "'self'",
+            'form-action': "'self'",
         },
         'referrer_policy': 'strict-origin-when-cross-origin',
         'feature_policy': {
@@ -70,8 +72,11 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SESSION_COOKIE_SECURE = False  # Allow HTTP in development
     SECURITY_HEADERS = {
-        **Config.SECURITY_HEADERS,
         'force_https': False,
+        'strict_transport_security': False,
+        'content_security_policy': False,  # Disable CSP in development
+        'referrer_policy': False,
+        'feature_policy': False,
     }
 
 class ProductionConfig(Config):
@@ -79,8 +84,24 @@ class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
     SECURITY_HEADERS = {
-        **Config.SECURITY_HEADERS,
         'force_https': True,
+        'strict_transport_security': True,
+        'content_security_policy': {
+            'default-src': "'self'",
+            'script-src': "'self' cdn.jsdelivr.net",
+            'style-src': "'self' cdn.jsdelivr.net fonts.googleapis.com",
+            'img-src': "'self' data:",
+            'font-src': "'self' cdn.jsdelivr.net fonts.gstatic.com",
+            'connect-src': "'self'",
+            'form-action': "'self'",
+            'frame-ancestors': "'none'",
+        },
+        'referrer_policy': 'strict-origin-when-cross-origin',
+        'feature_policy': {
+            'geolocation': "'none'",
+            'microphone': "'none'",
+            'camera': "'none'",
+        }
     }
     
     # Enhanced security for production
@@ -93,6 +114,13 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
     SESSION_COOKIE_SECURE = False
+    SECURITY_HEADERS = {
+        'force_https': False,
+        'strict_transport_security': False,
+        'content_security_policy': False,
+        'referrer_policy': False,
+        'feature_policy': False,
+    }
 
 config = {
     'development': DevelopmentConfig,
