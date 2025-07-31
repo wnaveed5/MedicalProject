@@ -96,6 +96,12 @@ I welcome contributions! To get started:
 3. Ensure the test suite passes:  
    ```bash
    pytest --cov=migrations tests/
+
+<img width="1454" height="707" alt="Screenshot 2025-07-31 at 2 28 28 PM" src="https://github.com/user-attachments/assets/49943bf0-20b3-4aaa-8875-7ae84e0c12eb" />
+<img width="1458" height="710" alt="Screenshot 2025-07-31 at 2 29 19 PM" src="https://github.com/user-attachments/assets/1a923e72-f14e-4ab1-80f6-7499994b08e3" />
+
+
+   
    ```
 4. Submit a pull request with a clear description of your changes.
 
